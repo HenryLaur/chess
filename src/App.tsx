@@ -1,12 +1,17 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import { MainPage } from "./screen/MainPage";
+import { Chess } from "./screen/Chess";
+import { useSelector, Provider } from "react-redux";
+import store, { RootState } from "./store/store";
+import { SelectScreen } from "./screen/SelectScreen";
 
 function App() {
+  const gameType = useSelector((state: RootState) => state.game.gameType);
   return (
     <div className="App">
-      <MainPage />
+      {gameType && <Chess />}
+      {!gameType && <SelectScreen />}
     </div>
   );
 }
