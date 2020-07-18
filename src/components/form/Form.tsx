@@ -21,6 +21,8 @@ const useStyles = makeStyles({
 });
 export const Form = () => {
   const [black, setBlack] = useState<any>("");
+  const [buttonName, setButtonName] = useState<any>("Start");
+
   const [white, setWhite] = useState<any>("");
   const playerUuid = useSelector((state: RootState) => state.game.playerUuid);
 
@@ -72,6 +74,7 @@ export const Form = () => {
         }
       }
     }
+    setButtonName("Waiting...")
   };
   return (
     <Grid container>
@@ -89,7 +92,7 @@ export const Form = () => {
       <Grid item xs={12} sm={7} />
       <Grid item xs={12} sm={5}>
         <Button variant="contained" color="primary" onClick={handleSubmit}>
-          Start
+          {buttonName}
         </Button>
       </Grid>
     </Grid>

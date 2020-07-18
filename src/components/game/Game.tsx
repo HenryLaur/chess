@@ -7,9 +7,8 @@ import { sendWebsocketMessage, getSocket } from "../../websocket/Websocket";
 import * as AI from "js-chess-engine";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-export const BoardContent = (children: any) => {};
 
-export const Board = () => {
+export const Game = () => {
   const [chess, setChess] = useState<any>(null);
   const [highlightSquareStyle, setHighlightSquareStyle] = useState<any>({});
   const [fen, setFen] = useState<string>(
@@ -18,9 +17,9 @@ export const Board = () => {
   const playerColor = useSelector((state: RootState) => state.game.playerColor);
   const gameType = useSelector((state: RootState) => state.game.gameType);
   const playerUuid = useSelector((state: RootState) => state.game.playerUuid);
+  const [info, setInfo] = useState<string>("White's Turn");
 
   useEffect(() => {
-    console.log(gameType)
     if (gameType === "HUMAN_VS_HUMAN") {
       const socket = getSocket(playerUuid);
       if (socket) {
@@ -29,13 +28,12 @@ export const Board = () => {
           if (move && move.fen && move.playerUuid) {
             if (move.playerUuid !== playerUuid) {
               setFen(move.fen);
-              chess.load(move.fen)
+              chess.load(move.fen);
             }
           }
         };
       }
     }
-
   }, [playerUuid, gameType, chess]);
 
   useEffect(() => {
@@ -54,16 +52,18 @@ export const Board = () => {
 
   const aiMove = () => {
     setTimeout(() => {
-      const move = AI.aiMove(chess.fen(), 1);
-      const { sourceSquare, targetSquare } = getSquare(move);
-      const chessMove = chess.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: "q",
-      });
-      if (!chessMove) return;
-      setFen(chess.fen());
-      AIVSAIGame();
+      if (!chess.in_checkmate()) {
+        const move = AI.aiMove(chess.fen(), 1);
+        const { sourceSquare, targetSquare } = getSquare(move);
+        const chessMove = chess.move({
+          from: sourceSquare,
+          to: targetSquare,
+          promotion: "q",
+        });
+        if (!chessMove) return;
+        setFen(chess.fen());
+        AIVSAIGame();
+      }
     }, 100);
   };
 
@@ -85,7 +85,6 @@ export const Board = () => {
     sourceSquare: Chess.Square,
     squaresToHighlight: Chess.Square[]
   ) => {
-
     const highlightStyles = [sourceSquare, ...squaresToHighlight].reduce(
       (a, c) => {
         return {
@@ -122,7 +121,12 @@ export const Board = () => {
   };
 
   const startGame = () => {
-    if ((playerColor === "black" && chess.turn() === "w" && gameType !== "HUMAN_VS_HUMAN") || gameType === "AI_VS_AI") {
+    if (
+      (playerColor === "black" &&
+        chess.turn() === "w" &&
+        gameType !== "HUMAN_VS_HUMAN") ||
+      gameType === "AI_VS_AI"
+    ) {
       aiMove();
     }
   };
@@ -131,25 +135,37 @@ export const Board = () => {
     if (gameType === "HUMAN_VS_HUMAN") {
       sendWebsocketMessage({
         fen: chess.fen(),
-        playerUuid
+        playerUuid,
       });
     } else {
-      aiMove()
+      aiMove();
     }
-  }
+  };
+
+  useEffect(() => {
+    if (chess) {
+      if (chess.in_checkmate()) {
+        setInfo(`${chess.turn() === "w" ? "Black" : "White"} has won the game`);
+      } else {
+        setInfo(chess.turn() === "w" ? "White's turn" : "Black's turn");
+      }
+    }
+  }, [playerColor, chess, fen]);
 
   const AIVSAIGame = () => {
     if (gameType === "AI_VS_AI") {
-      setTimeout(() => aiMove(), 1000)
+      setTimeout(() => aiMove(), 1000);
     }
-  }
+  };
+  const isPlayerTurn = () =>
+    playerColor?.charAt(0).toLocaleLowerCase() === chess?.turn();
   return (
     <div>
       <Chessboard
-        allowDrag={() => playerColor?.charAt(0).toLocaleLowerCase() === chess?.turn()}
+        allowDrag={() => isPlayerTurn() && !chess.in_checkmate()}
         orientation={playerColor}
         onMouseOutSquare={onMouseOutSquare}
-        squareStyles={highlightSquareStyle}
+        squareStyles={isPlayerTurn() ? highlightSquareStyle : {}}
         onMouseOverSquare={onMouseOverSquare}
         onDrop={({ sourceSquare, targetSquare }) =>
           handleOnDrop(sourceSquare, targetSquare)
@@ -157,14 +173,12 @@ export const Board = () => {
         transitionDuration={300}
         position={fen}
       />
+      {info}
     </div>
   );
 };
 const getSquare = (move: any) => {
   const sourceSquare = Object.keys(move)[0].toLocaleLowerCase();
-  const targetSquare = (Object.values(
-    move
-  )[0] as string).toLocaleLowerCase();
+  const targetSquare = (Object.values(move)[0] as string).toLocaleLowerCase();
   return { sourceSquare, targetSquare };
-}
-
+};
