@@ -16,6 +16,7 @@ export const getSocket = (uuid: string | null | undefined) => {
     return null;
   }
   if (socket && socketChannelUuid() === uuid) {
+    console.log("SAME SOCKET")
     return socket;
   } else {
     return connectWebsocket(uuid);

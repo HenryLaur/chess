@@ -9,8 +9,10 @@ import {
   Button,
 } from "@material-ui/core";
 import { Select } from "./Select";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setGameType, setPlayerColor } from "../game/GameSlice";
+import { getSocket } from "../../websocket/Websocket";
+import { RootState } from "../../store/store";
 
 const useStyles = makeStyles({
   select: {
@@ -20,6 +22,8 @@ const useStyles = makeStyles({
 export const Form = () => {
   const [black, setBlack] = useState<any>("");
   const [white, setWhite] = useState<any>("");
+  const playerUuid = useSelector((state: RootState) => state.game.playerUuid);
+
   const classes = useStyles();
   const dispatch = useDispatch();
 
@@ -30,24 +34,44 @@ export const Form = () => {
       (white === "AI" && black === "HUMAN")
     ) {
       return "AI_VS_HUMAN";
+    } else if (white === "AI" && black === "AI") {
+      return "AI_VS_AI";
+    
     } else {
       return "HUMAN_VS_HUMAN";
     }
   };
-
+  // not called for human v human
   const getPlayerColor = () => {
     if (getGameType() === "AI_VS_HUMAN") {
       return white === "HUMAN" ? "white" : "black";
-    } else if (getGameType() === "HUMAN_VS_HUMAN") {
-      return "white";
     } else {
       return undefined;
     }
   };
 
   const handleSubmit = () => {
-    dispatch(setPlayerColor(getPlayerColor()));
-    dispatch(setGameType(getGameType()));
+    if (getGameType() !== "HUMAN_VS_HUMAN") {
+      dispatch(setPlayerColor(getPlayerColor()));
+      dispatch(setGameType(getGameType()));
+    } else {
+      const socket = getSocket(playerUuid);
+      if (socket) {
+        socket.onmessage = (event) => {
+          const game = JSON.parse(event.data);
+          console.log(game)
+          if (game.player1 && game.player2) {
+            if (game.player1.uuid === playerUuid) {
+              dispatch(setPlayerColor(game.player1.color));
+              dispatch(setGameType(getGameType()));
+            } else {
+              dispatch(setPlayerColor(game.player2.color));
+              dispatch(setGameType(getGameType()));
+            }
+          }
+        }
+      }
+    }
   };
   return (
     <Grid container>

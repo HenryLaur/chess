@@ -7,14 +7,6 @@ import { v4 as uuid } from "uuid";
 const useStyles = makeStyles({});
 
 export const Chess = () => {
-  useEffect(() => {
-    const socket = getSocket(uuid());
-    if (socket) {
-      socket.onmessage = (event) => {
-        console.log(event);
-      };
-    }
-  }, []);
   return (
     <Box>
       <Board />

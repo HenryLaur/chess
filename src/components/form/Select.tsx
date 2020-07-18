@@ -20,7 +20,6 @@ export const Select = ({
   onChange: (change: any) => void;
   label: string;
 }) => {
-  console.log(label);
   const classes = useStyles();
   return (
     <FormControl className={classes.select}>

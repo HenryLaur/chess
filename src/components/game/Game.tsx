@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Chessboard from "chessboardjsx";
 // @ts-ignore
 import * as Chess from "chess.js";
-import { sendWebsocketMessage } from "../../websocket/Websocket";
+import { sendWebsocketMessage, getSocket } from "../../websocket/Websocket";
 // @ts-ignore
 import * as AI from "js-chess-engine";
 import { useSelector } from "react-redux";
@@ -16,15 +16,34 @@ export const Board = () => {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
   );
   const playerColor = useSelector((state: RootState) => state.game.playerColor);
-  const [history, setHistory] = useState([]);
+  const gameType = useSelector((state: RootState) => state.game.gameType);
+  const playerUuid = useSelector((state: RootState) => state.game.playerUuid);
+
+  useEffect(() => {
+    console.log(gameType)
+    if (gameType === "HUMAN_VS_HUMAN") {
+      const socket = getSocket(playerUuid);
+      if (socket) {
+        socket.onmessage = (event) => {
+          const move = JSON.parse(event.data);
+          if (move && move.fen && move.playerUuid) {
+            if (move.playerUuid !== playerUuid) {
+              setFen(move.fen);
+              chess.load(move.fen)
+            }
+          }
+        };
+      }
+    }
+
+  }, [playerUuid, gameType, chess]);
+
   useEffect(() => {
     // @ts-ignore
     setChess(new Chess());
-  }, [setChess]);
+  }, []);
 
   useEffect(() => {
-    // @ts-ignore
-
     const interval = setInterval(() => {
       if (chess) {
         startGame();
@@ -36,10 +55,7 @@ export const Board = () => {
   const aiMove = () => {
     setTimeout(() => {
       const move = AI.aiMove(chess.fen(), 1);
-      const sourceSquare = Object.keys(move)[0].toLocaleLowerCase();
-      const targetSquare = (Object.values(
-        move
-      )[0] as string).toLocaleLowerCase();
+      const { sourceSquare, targetSquare } = getSquare(move);
       const chessMove = chess.move({
         from: sourceSquare,
         to: targetSquare,
@@ -47,6 +63,7 @@ export const Board = () => {
       });
       if (!chessMove) return;
       setFen(chess.fen());
+      AIVSAIGame();
     }, 100);
   };
 
@@ -59,27 +76,18 @@ export const Board = () => {
       to: targetSquare,
       promotion: "q",
     });
-    console.log(sourceSquare);
     if (!move) return;
-    sendWebsocketMessage({
-      move: chess.fen(),
-    });
     setFen(chess.fen());
-    aiMove();
-    setHistory(chess.history({ verbose: true }));
+    handleNextMove();
   };
 
   const highlightSquare = (
     sourceSquare: Chess.Square,
     squaresToHighlight: Chess.Square[]
   ) => {
-    console.log({
-      sourceSquare,
-      squaresToHighlight,
-    });
+
     const highlightStyles = [sourceSquare, ...squaresToHighlight].reduce(
       (a, c) => {
-        console.log({ a, c });
         return {
           ...a,
           ...{
@@ -88,10 +96,6 @@ export const Board = () => {
               borderRadius: "50%",
             },
           },
-          ...squareStyling({
-            history: [],
-            pieceSquare: sourceSquare,
-          }),
         };
       },
       {}
@@ -101,16 +105,12 @@ export const Board = () => {
   };
 
   const onMouseOverSquare = (square: Chess.Square) => {
-    // get list of possible moves for this square
     let moves = chess.moves({
       square: square,
       verbose: true,
     });
-
-    // exit if there are no moves available for this square
     if (moves.length === 0) return;
-
-    let squaresToHighlight = [];
+    const squaresToHighlight = [];
     for (var i = 0; i < moves.length; i++) {
       squaresToHighlight.push(moves[i].to);
     }
@@ -122,14 +122,31 @@ export const Board = () => {
   };
 
   const startGame = () => {
-    if (playerColor === "black" && chess.turn() === "w") {
+    if ((playerColor === "black" && chess.turn() === "w" && gameType !== "HUMAN_VS_HUMAN") || gameType === "AI_VS_AI") {
       aiMove();
     }
   };
-  console.log("RENDER");
+
+  const handleNextMove = () => {
+    if (gameType === "HUMAN_VS_HUMAN") {
+      sendWebsocketMessage({
+        fen: chess.fen(),
+        playerUuid
+      });
+    } else {
+      aiMove()
+    }
+  }
+
+  const AIVSAIGame = () => {
+    if (gameType === "AI_VS_AI") {
+      setTimeout(() => aiMove(), 1000)
+    }
+  }
   return (
     <div>
       <Chessboard
+        allowDrag={() => playerColor?.charAt(0).toLocaleLowerCase() === chess?.turn()}
         orientation={playerColor}
         onMouseOutSquare={onMouseOutSquare}
         squareStyles={highlightSquareStyle}
@@ -143,28 +160,11 @@ export const Board = () => {
     </div>
   );
 };
+const getSquare = (move: any) => {
+  const sourceSquare = Object.keys(move)[0].toLocaleLowerCase();
+  const targetSquare = (Object.values(
+    move
+  )[0] as string).toLocaleLowerCase();
+  return { sourceSquare, targetSquare };
+}
 
-const squareStyling = ({
-  pieceSquare,
-  history,
-}: {
-  pieceSquare: any;
-  history: any;
-}) => {
-  const sourceSquare = history.length && history[history.length - 1].from;
-  const targetSquare = history.length && history[history.length - 1].to;
-
-  return {
-    [pieceSquare]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
-    ...(history.length && {
-      [sourceSquare]: {
-        backgroundColor: "rgba(255, 255, 0, 0.4)",
-      },
-    }),
-    ...(history.length && {
-      [targetSquare]: {
-        backgroundColor: "rgba(255, 255, 0, 0.4)",
-      },
-    }),
-  };
-};
