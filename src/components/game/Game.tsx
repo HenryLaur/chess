@@ -7,6 +7,15 @@ import { sendWebsocketMessage, getSocket } from "../../websocket/Websocket";
 import * as AI from "js-chess-engine";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
+import { makeStyles, Box, Typography } from "@material-ui/core";
+
+const useStyles = makeStyles({
+  board: {
+    display: "flex",
+    justifyContent: "center",
+    paddingTop: "100px",
+  },
+});
 
 export const Game = () => {
   const [chess, setChess] = useState<any>(null);
@@ -18,6 +27,7 @@ export const Game = () => {
   const gameType = useSelector((state: RootState) => state.game.gameType);
   const playerUuid = useSelector((state: RootState) => state.game.playerUuid);
   const [info, setInfo] = useState<string>("White's Turn");
+  const classes = useStyles();
 
   useEffect(() => {
     if (gameType === "HUMAN_VS_HUMAN") {
@@ -160,21 +170,25 @@ export const Game = () => {
   const isPlayerTurn = () =>
     playerColor?.charAt(0).toLocaleLowerCase() === chess?.turn();
   return (
-    <div>
-      <Chessboard
-        allowDrag={() => isPlayerTurn() && !chess.in_checkmate()}
-        orientation={playerColor}
-        onMouseOutSquare={onMouseOutSquare}
-        squareStyles={isPlayerTurn() ? highlightSquareStyle : {}}
-        onMouseOverSquare={onMouseOverSquare}
-        onDrop={({ sourceSquare, targetSquare }) =>
-          handleOnDrop(sourceSquare, targetSquare)
-        }
-        transitionDuration={300}
-        position={fen}
-      />
-      {info}
-    </div>
+    <Box>
+      <Box className={classes.board}>
+        <Chessboard
+          allowDrag={() => isPlayerTurn() && !chess.in_checkmate()}
+          orientation={playerColor}
+          onMouseOutSquare={onMouseOutSquare}
+          squareStyles={isPlayerTurn() ? highlightSquareStyle : {}}
+          onMouseOverSquare={onMouseOverSquare}
+          onDrop={({ sourceSquare, targetSquare }) =>
+            handleOnDrop(sourceSquare, targetSquare)
+          }
+          transitionDuration={300}
+          position={fen}
+        />
+      </Box>
+      <Typography variant="body2" component="span">
+        {info}
+      </Typography>
+    </Box>
   );
 };
 const getSquare = (move: any) => {

@@ -7,6 +7,7 @@ import {
   Typography,
   Grid,
   Button,
+  Box,
 } from "@material-ui/core";
 import { Select } from "./Select";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,8 +16,18 @@ import { getSocket } from "../../websocket/Websocket";
 import { RootState } from "../../store/store";
 
 const useStyles = makeStyles({
-  select: {
-    width: "150px",
+  vertical: {
+    paddingTop: "15%",
+    margin: "10px",
+  },
+  center: {
+    justifyContent: "center",
+  },
+  vs: {
+    paddingTop: "24px",
+  },
+  start: {
+    paddingTop: "24px",
   },
 });
 export const Form = () => {
@@ -38,7 +49,6 @@ export const Form = () => {
       return "AI_VS_HUMAN";
     } else if (white === "AI" && black === "AI") {
       return "AI_VS_AI";
-    
     } else {
       return "HUMAN_VS_HUMAN";
     }
@@ -61,7 +71,7 @@ export const Form = () => {
       if (socket) {
         socket.onmessage = (event) => {
           const game = JSON.parse(event.data);
-          console.log(game)
+          console.log(game);
           if (game.player1 && game.player2) {
             if (game.player1.uuid === playerUuid) {
               dispatch(setPlayerColor(game.player1.color));
@@ -71,30 +81,41 @@ export const Form = () => {
               dispatch(setGameType(getGameType()));
             }
           }
-        }
+        };
       }
     }
-    setButtonName("Waiting...")
+    setButtonName("Waiting...");
   };
   return (
-    <Grid container>
-      <Grid item xs={12} sm={2}>
-        <Select label="White" value={white} onChange={setWhite} />
+    <Box className={classes.vertical}>
+      <Typography variant="h1" component="span">
+        CHESS
+      </Typography>
+      <Grid className={classes.center} container>
+        <Grid item xs={12} sm={2}>
+          <Select label="White" value={white} onChange={setWhite} />
+        </Grid>
+        <Grid item xs={12} sm={1} className={classes.vs}>
+          <Typography variant="body2" component="span">
+            VS
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={2}>
+          <Select label="Black" value={black} onChange={setBlack} />
+        </Grid>
       </Grid>
-      <Grid item xs={12} sm={1}>
-        <Typography variant="body2" component="span">
-          VS
-        </Typography>
+      <Grid className={classes.center} container>
+        <Grid item xs={12} sm={3} className={classes.start}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            fullWidth
+          >
+            {buttonName}
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12} sm={2}>
-        <Select label="Black" value={black} onChange={setBlack} />
-      </Grid>
-      <Grid item xs={12} sm={7} />
-      <Grid item xs={12} sm={5}>
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
-          {buttonName}
-        </Button>
-      </Grid>
-    </Grid>
+    </Box>
   );
 };

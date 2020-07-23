@@ -8,7 +8,7 @@ import {
 } from "@material-ui/core";
 const useStyles = makeStyles({
   select: {
-    width: "150px",
+    width: "100%",
   },
 });
 export const Select = ({
@@ -26,7 +26,6 @@ export const Select = ({
       <InputLabel id="demo-simple-select-label">{label}</InputLabel>
       <MUISelect
         fullWidth
-        className={classes.select}
         labelId={`${label}-select`}
         label={label}
         id={`${label}-select`}
