@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Box, makeStyles } from "@material-ui/core";
 import { Game } from "../components/game/Game";
-import { getSocket } from "../websocket/Websocket";
-import { v4 as uuid } from "uuid";
 
-const useStyles = makeStyles({});
+const useStyles = makeStyles({
+  root: {
+    background: "#cccccc",
+  },
+});
 
 export const Chess = () => {
+  const classes = useStyles();
   return (
-    <Box>
+    <Box className={classes.root}>
       <Game />
     </Box>
   );

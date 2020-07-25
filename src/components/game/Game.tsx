@@ -13,7 +13,6 @@ const useStyles = makeStyles({
   board: {
     display: "flex",
     justifyContent: "center",
-    paddingTop: "100px",
   },
 });
 
@@ -173,6 +172,7 @@ export const Game = () => {
     <Box>
       <Box className={classes.board}>
         <Chessboard
+          calcWidth={({ screenWidth, screenHeight }: { screenWidth: number, screenHeight: number }) => { return Math.min(screenHeight, screenWidth) - 24}}
           allowDrag={() => isPlayerTurn() && !chess.in_checkmate()}
           orientation={playerColor}
           onMouseOutSquare={onMouseOutSquare}
