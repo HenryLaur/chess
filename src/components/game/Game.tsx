@@ -36,8 +36,8 @@ export const Game = () => {
           const move = JSON.parse(event.data);
           if (move && move.fen && move.playerUuid) {
             if (move.playerUuid !== playerUuid) {
-              setFen(move.fen);
               chess.load(move.fen);
+              setFen(move.fen);
             }
           }
         };
@@ -153,6 +153,8 @@ export const Game = () => {
 
   useEffect(() => {
     if (chess) {
+      console.log("turn");
+
       if (chess.in_checkmate()) {
         setInfo(`${chess.turn() === "w" ? "Black" : "White"} has won the game`);
       } else {
