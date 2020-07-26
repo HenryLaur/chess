@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  MenuItem,
-  makeStyles,
-  InputLabel,
-  FormControl,
-  Typography,
-  Grid,
-  Button,
-  Box,
-} from "@material-ui/core";
+import { makeStyles, Typography, Grid, Button, Box } from "@material-ui/core";
 import { Select } from "./Select";
 import { useDispatch, useSelector } from "react-redux";
 import { setGameType, setPlayerColor } from "../game/GameSlice";
@@ -108,7 +99,7 @@ export const Form = () => {
         <Grid item xs={12} sm={3} className={classes.start}>
           <Button
             variant="contained"
-            color="primary"
+            color="secondary"
             onClick={handleSubmit}
             fullWidth
           >

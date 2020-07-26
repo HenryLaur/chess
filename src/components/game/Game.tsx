@@ -172,7 +172,15 @@ export const Game = () => {
     <Box>
       <Box className={classes.board}>
         <Chessboard
-          calcWidth={({ screenWidth, screenHeight }: { screenWidth: number, screenHeight: number }) => { return Math.min(screenHeight, screenWidth) - 24}}
+          calcWidth={({
+            screenWidth,
+            screenHeight,
+          }: {
+            screenWidth: number;
+            screenHeight: number;
+          }) => {
+            return Math.min(screenHeight, screenWidth) - 58;
+          }}
           allowDrag={() => isPlayerTurn() && !chess.in_checkmate()}
           orientation={playerColor}
           onMouseOutSquare={onMouseOutSquare}
@@ -185,7 +193,7 @@ export const Game = () => {
           position={fen}
         />
       </Box>
-      <Typography variant="body2" component="span">
+      <Typography variant="h3" component="span">
         {info}
       </Typography>
     </Box>

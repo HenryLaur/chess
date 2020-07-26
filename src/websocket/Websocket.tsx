@@ -5,9 +5,9 @@ export const connectWebsocket = (uuid: string) => {
     socket.close();
   }
   console.log(
-    `CREATING NEW WS TO ws://${document.location.hostname}:8080/ws/${uuid}`
+    `CREATING NEW WS TO ws://${document.location.hostname}:8081/ws/${uuid}`
   );
-  socket = new WebSocket(`ws://${document.location.hostname}:8080/ws/${uuid}`);
+  socket = new WebSocket(`ws://${document.location.hostname}:8081/ws/${uuid}`);
   return socket;
 };
 
@@ -16,7 +16,7 @@ export const getSocket = (uuid: string | null | undefined) => {
     return null;
   }
   if (socket && socketChannelUuid() === uuid) {
-    console.log("SAME SOCKET")
+    console.log("SAME SOCKET");
     return socket;
   } else {
     return connectWebsocket(uuid);
